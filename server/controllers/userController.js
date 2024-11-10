@@ -40,7 +40,8 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = User.findOne({ email });
+    const user = await User.findOne({ email });
+
     if (!user) {
       return res
         .status(401)
@@ -54,7 +55,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const isMatch = await User.matchPassword(password);
+    const isMatch = await user.matchPassword(password);
 
     if (user && isMatch) {
       createJWT(res, user._id);
@@ -72,7 +73,7 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    res.cookies("token", "", { httpOnly: true, expires: new Date(0) });
+    res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
 
     res.status(200).json({ message: "Lgout successful" });
   } catch (error) {
@@ -140,11 +141,83 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-//   export const updateUserProfile = async (req, res) => {
-//     try {
-//     } catch (error) {
-//       return res
-//         .status(400)
-//         .json({ status: false, message: error.message });
-//     }
-//   };
+export const markNotificationRead = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { isReadType, id } = req.query;
+
+    if (isReadType === "all") {
+      await Notice.updateMany(
+        { team: userId, isRead: { $nin: [userId] } },
+        { $push: { isRead: userId } },
+        { new: true }
+      );
+    } else {
+      await Notice.findOneAndUpdate(
+        { _id: id, isRead: { $nin: [userId] } },
+        { $push: { isRead: userId } },
+        { new: true }
+      );
+    }
+    res.status(201).json({ status: true, message: "Done" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const changeUserPassword = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const user = await User.findById(userId);
+
+    if (user) {
+      user.password = req.body.password;
+      await User.save();
+      user.password = undefined;
+
+      res
+        .status(201)
+        .json({ status: true, message: "Password changed successfully" });
+    } else {
+      res.status(404).json({ status: false, message: "User not found" });
+    }
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const activateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (user) {
+      user.isActive = req.body.isActive;
+      await User.save();
+
+      res.status(201).json({
+        status: true,
+        message: `User account has been ${
+          user?.isActive ? "activated" : "disabled"
+        }`,
+      });
+    } else {
+      res.status(404).json({ status: false, message: "User not found" });
+    }
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
+export const deleteUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+
+    res
+      .status(200)
+      .json({ status: true, message: "User deleted successfully" });
+  } catch (error) {
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};

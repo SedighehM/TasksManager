@@ -6,7 +6,11 @@ import {
   logoutUser,
   getTeamList,
   getNotificationsList,
-  updateUserProfile
+  updateUserProfile,
+  markNotificationRead,
+  changeUserPassword,
+  activateUserProfile,
+  deleteUserProfile
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -19,7 +23,12 @@ router.get("/get-team", protectRoute, isAdminRoute, getTeamList);
 router.get("/notifications", protectRoute, getNotificationsList);
 
 router.put("/profile", protectRoute, updateUserProfile);
-// router.put("/read-noti", protectRoute, markNotificationRead);
-// router.put("/change-password", protectRoute, changeUserPassword);
+router.put("/read-noti", protectRoute, markNotificationRead);
+router.put("/change-password", protectRoute, changeUserPassword);
 
+//For Admin only
+router
+  .route("/:id")
+  .put(protectRoute, isAdminRoute, activateUserProfile)
+  .delete(protectRoute, isAdminRoute, deleteUserProfile);
 export default router;

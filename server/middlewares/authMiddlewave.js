@@ -15,6 +15,10 @@ const protectRoute = async (req, res, next) => {
         userId: decodedToken.userId,
       };
       next();
+    } else {
+      return res
+        .status(401)
+        .json({ status: false, message: "Not authorized. Try login again." });
     }
   } catch (error) {
     return res

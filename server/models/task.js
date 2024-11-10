@@ -33,7 +33,7 @@ const taskSchema = new Schema(
         by: { type: Schema.Types.ObjectId, ref: "User" },
       },
     ],
-    subTask: [{ title: String, date: Date, tag: String }],
+    subTasks: [{ title: String, date: Date, tag: String }],
     assets: [String],
     team: [{ type: Schema.Types.ObjectId, ref: "User" }],
     isTrashed: { type: Boolean, default: false },

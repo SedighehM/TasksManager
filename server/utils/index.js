@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 const dbConnection = async () => {
   try {
@@ -16,7 +17,7 @@ export const createJWT = (res, userId) => {
     expiresIn: "1d",
   });
 
-  res.cookies("token", token, {
+  res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
     sameSite: "strict", //prevent CSRF attacks
